@@ -42,7 +42,7 @@ On peut alors flasher la carte avec la commande :
 ```
 $ sudo dd if=sdcard.img of=/dev/sdb
 ```
-**NB.** Ici, la carte SD est considéré comme le seconde disque dur (nommé `/dev/sdb` par convention).
+**NB.** Ici, la carte SD est considéré comme le second disque dur (nommé `/dev/sdb` par convention). Vérifier si c'est le cas sur votre machine avec la commande `lsblk`.
 
 A l'issue de cette opération, la carte SD comporte normalement deux partitions.
 On peut alors copier `start_x.elf` et `fixup_x.dat` depuis le conteneur sur la 1ère partition de la carte SD et modifier le fichier `config.txt` de la 1ère partition de la carte SD pour ajouter :
@@ -52,9 +52,30 @@ gpu_mem=128
 ````
 La configuration et le flashage de la carte SD est terminé.
 
+
 ## Installation de V4L
 
+```
+$: git clone https://github.com/twam/v4l2grab
+```
+Une fois dans le fichier v4l2grab:
+- Pour activer les autotools:
+```
+$: sh autogen.sh
+```
+- Commenter #undef malloc dans config.h.in
+- Pour créer le config.h :
+```
+$:./configure
+```
+- Compiler
+```
+$: ./configure CC=/root/buildroot-precompiled-2017.08/output/host/usr/bin/arm-linux-gcc --host=linux
+$: make
+```
 
+Executable sans socket qui fonctionnait avec la caméra du raspberry sur git : Projet_linux_embarque/camera/v4l2grab
+Code sans socket qui fonctionnait avec la caméra du raspberry sur git : Projet_linux_embarque/camera/v4l2grab.c
 
 ## Compilation et installation 
 
