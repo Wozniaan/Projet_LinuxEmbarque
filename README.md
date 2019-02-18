@@ -7,17 +7,21 @@
 - Louis Valery
 - Anne-Laure Wozniak
 
-## Flashage de la carte SD
+Vous trouverez ci-dessous les sections suivantes :
+- **Mise en place du système :** cette section explique comment nous avons installé et configuré les différents éléments de ce projet,
+- **Documentation utilisateur :** cette section présente les étapes pour l'utilisation du projet.
+
+## Mise en place du système
 
 ### Buildroot
 Buildroot est un ensemble de Makefile permettant d'automatiser le processus de build d'une distribution Linux embarquée.
 
-Dans le cadre de ce projet, une tarball Buildroot est disponible via une image Docker [ici](https://github.com/pblottiere/embsys/tree/master/labs/rpi3/docker), sous le nom "buildroot-video". La tarball contient le système d'exploitation précompilé qui sera embarqué sur la carte Raspberry Pi 3. Ce système supporte notamment la caméra que l'on souhaite manipuler. Afin de pouvoir interagir avec la caméra, on utilisera l'API de [V4L](https://linuxtv.org/downloads/v4l-dvb-apis/uapi/v4l/v4l2.html).
+Dans le cadre de ce projet, une tarball Buildroot est disponible via une image Docker [ici](https://github.com/pblottiere/embsys/tree/master/labs/rpi3/docker), sous le nom "buildroot-video". La tarball contient le système d'exploitation précompilé qui sera embarqué sur la carte Raspberry Pi 3. Ce système supporte notamment la caméra que l'on souhaite manipuler. Afin de pouvoir interagir avec la caméra, on utilisera l'API [V4L](https://github.com/twam/v4l2grab).
 
 On peut vérifier que tout est correctement configuré en s'assurant que les options `BR2_PACKAGE_RPI_FIRMWARE_X`  et `BR2_PACKAGE_LIBV4L` sont activées dans le fichier de configuration de Buildroot (fichier `/configs/embsys_defconfig`). Pour cela, il faudra cependant ouvrir au préalable un conteneur à l'aide de Docker et extraire la tarball.
 
 ### Docker
-Pour accéder au système précompilé, on utilise Docker. Il s'agit d'un logiciel libre permettant la mise en oeuvre de conteneurs (environnements) de façon à isoler des applications (ici, notre système précompilé). Le kernel partage alors les ressources du système hote et intéragit avec chacun des conteneurs en fonctionnement. Docker se distingue ainsi d'une machine virtuelle qui isole un système et dispose de ses propres ressources.
+Pour accéder au système précompilé, on utilise Docker. Il s'agit d'un logiciel libre permettant la mise en oeuvre de conteneurs (environnements) de façon à isoler des applications (ici, notre système précompilé). Le kernel partage alors les ressources du système hôte et intéragit avec chacun des conteneurs en fonctionnement. Docker se distingue ainsi d'une machine virtuelle qui isole un système et dispose de ses propres ressources.
 
 ![IMG_Docker](https://www.docker.com/sites/default/files/d8/2018-11/docker-containerized-and-vm-transparent-bg.png)
 source : https://www.docker.com/
@@ -32,7 +36,7 @@ $ sudo docker run -it pblottiere/embsys-rpi3-buildroot-video /bin/bash
 Concrètement, on récupère l'image Docker puis on crée un conteneur. Ensuite, on extrait le système.
 On peut alors réaliser les vérifications sur les fichiers de configuration. Comme le système est précompilé, cela signifie que nous n'avons pas besoin de faire la configuration et le build à la main (`make embsys_defconfig`, `make menuconfig` et `make`). On peut passer directement au flashage.
 
-### Flashage
+### Flashage de la carte SD
 
 Afin de flasher la carte SD qui sera insérée dans la Raspberry Pi 3, on doit tout d'abord créer une image :
 ```
@@ -50,7 +54,7 @@ On peut alors copier `start_x.elf` et `fixup_x.dat` depuis le conteneur sur la 1
 start_x=1
 gpu_mem=128
 ````
-La configuration et le flashage de la carte SD est terminé.
+La configuration et le flashage de la carte SD sont terminés.
 
 ### Configuration IP
 
@@ -81,30 +85,48 @@ On peut vérifier que la configuration est la bonne en se connectant en ssh depu
 ssh user@172.20.11.112
 ```
 
+### Configuration et installation de V4L
 
-## Installation de V4L
+Comme évoqué précédement, V4L (Video4Linux) est une API vidéo pour les systèmes Linux. Il existe deux versions de cette API et on utilise ici la version 2 (V4L2). On pourra ainsi capturer les flux vidéo/image de la caméra de la RPI3.
 
+Pour installer et configurer l'API sur la carte, on réalise les étapes suivantes :
+- On récupère le projet v4l2grab :
 ```
-$: git clone https://github.com/twam/v4l2grab
+$ git clone https://github.com/twam/v4l2grab
 ```
-Une fois dans le fichier v4l2grab:
-- Pour activer les autotools:
+- Une fois dans le fichier v4l2grab, on peut activer les autotools :
 ```
-$: sh autogen.sh
+$ sh autogen.sh
 ```
-- Commenter #undef malloc dans config.h.in
-- Pour créer le config.h :
+- On commente `#undef malloc` dans config.h.in
+- On crée le fichier config.h :
 ```
-$:./configure
+$ ./configure
 ```
-- Compiler
+- On compile pour la RPI3 :
 ```
-$: ./configure CC=/root/buildroot-precompiled-2017.08/output/host/usr/bin/arm-linux-gcc --host=linux
-$: make
+$ ./configure CC=/root/buildroot-precompiled-2017.08/output/host/usr/bin/arm-linux-gcc --host=linux
+$ make
+```
+Il s'agit ici de cross-compilation puisque la carte Raspberry n'a pas la même architecture que la machine sur laquelle on fait la compilation. Le binaire généré ne sera notamment pas exécutable sur ladite machine.
+
+Une fois la compilation correctement terminée, on peut alors copier l'exécutable sur la carte RPI3 (dans le dossier `/root`). Les commandes suivantes permettent d'activer le module de la caméra et de prendre une photo :
+```
+$ modprobe bcm2835-v4l2
+$ cd /root
+$ ./v4l2grab -d /dev/video0 -o img.jpg
 ```
 
-Executable sans socket qui fonctionnait avec la caméra du raspberry sur git : Projet_linux_embarque/camera/v4l2grab
-Code sans socket qui fonctionnait avec la caméra du raspberry sur git : Projet_linux_embarque/camera/v4l2grab.c
+**NB.** Dans le projet git on trouve :
+- Executable avec socket : Projet_linux_embarque/camera/avecSocket/v4l2grab
+- Code avec socket : Projet_linux_embarque/camera/v4l2grab.c
 
-## Compilation et installation 
+## Documentation utilisateur
+
+Un certain nombre des étapes de configuration et installation précédemment évoquées sont automatisées à l'aide du Makefile :
+- Copie des codes Python pour le servo-moteur et son serveur,
+- Copie de l'exécutable pour le module V4L2 permettant l'utilisation de la caméra et son serveur,
+- Lancement des serveurs, activation du module...
+
+**TODO**
 
