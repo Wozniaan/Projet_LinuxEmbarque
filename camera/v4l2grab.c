@@ -60,7 +60,12 @@
 #include <signal.h>
 #include <stdint.h>
 #include <inttypes.h>
-
+#include <sys/socket.h> 
+#include <sys/types.h>
+#include <netinet/in.h>
+#define MAX 80 
+#define PORT 12810 
+#define SA struct sockaddr 
 #include "config.h"
 #include "yuv.h"
 
@@ -865,35 +870,68 @@ long_options [] = {
 	{ 0, 0, 0, 0 }
 };
 
-void func(int sockfd) 
-{
-    char buff[MAX]; 
-    int n; 
-    // infinite loop for chat 
-    for (;;) { 
-        bzero(buff, MAX); 
-	           
-	// read the message from client and copy it in buffer 
-	read(sockfd, buff, sizeof(buff)); 
-	// print buffer which contains the client contents 
-	printf("From client: %s\t To client : ", buff); 
-	bzero(buff, MAX); 
-	n = 0; 
-	// copy server message in the buffer  
-	while ((buff[n++] = getchar()) != '\n')
-	       ;                                                                                          // and send that buffer to client                                                                                                             write(sockfd, buff, sizeof(buff)); 
-		    //                                                                             
-		    //                                                                                                                       // if msg contains "Exit" then server exit and chat ended. 
-		    //                                                                                                                               if (strncmp("exit", buff, 4) == 0) { 
-		    //                                                                                                                                           printf("Server Exit...\n"); 
-		    //                                                                                                                                                       break; 
-		    //                                                                                                                                                               } 
-		    //                                                                                                                                                                   } 
-		    //                                                                                                                                                                   } 
 
+char func(int sockfd) 
+{ 
+    char buff[1] = "0";
+    char buff_tot[MAX]; 
+     
+    // infinite loop for chat 
+    // read the message from client and copy it in buffer 
+    read(sockfd, buff_tot, sizeof(buff_tot)); 
+    // send that buffer to client 
+    write(sockfd, "5 / 5", sizeof("5 / 5"));
+    printf("commande = %c\n", buff_tot[0]);  
+    return buff_tot[0];
+
+} 
 
 int main(int argc, char **argv)
 {
+    char buff = '0';
+    int sockfd, connfd, len; 
+    struct sockaddr_in servaddr, cli; 
+  
+    // socket create and verification 
+    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+    if (sockfd == -1) { 
+        printf("socket creation failed...\n"); 
+        exit(0); 
+    } 
+    else
+        printf("Socket successfully created..\n"); 
+    bzero(&servaddr, sizeof(servaddr)); 
+  
+    // assign IP, PORT 
+    servaddr.sin_family = AF_INET; 
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    servaddr.sin_port = htons(PORT); 
+  
+    // Binding newly created socket to given IP and verification 
+    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
+        printf("socket bind failed...\n"); 
+        exit(0); 
+    } 
+    else
+        printf("Socket successfully binded..\n"); 
+  
+    // Now server is ready to listen and verification 
+    if ((listen(sockfd, 5)) != 0) { 
+        printf("Listen failed...\n"); 
+        exit(0); 
+    } 
+    else
+        printf("Server listening..\n"); 
+    len = sizeof(cli); 
+  
+    // Accept the data packet from client and verification 
+    connfd = accept(sockfd, (SA*)&cli, &len); 
+    if (connfd < 0) { 
+        printf("server acccept failed...\n"); 
+        exit(0); 
+    } 
+    else
+        printf("server acccept the client...\n"); 
 
 	for (;;) {
 		int index, c = 0;
@@ -987,42 +1025,45 @@ int main(int argc, char **argv)
 	}
 
 	// check for need parameters
-	if (!jpegFilename) {
-		fprintf(stderr, "You have to specify JPEG output filename!\n\n");
-		usage(stdout, argc, argv);
-		exit(EXIT_FAILURE);
-	}
-	
-	if(continuous == 1) {
+	jpegFilename = "img.jpg";
+	int count_photos = 0;
+	char photo_nb[12];
+        buff = func(connfd);	
+        while (buff != 'f') { 
+		if(buff == 's') {
+		sprintf(photo_nb,"%d",count_photos);
+		count_photos += 1;
+	        jpegFilename = strcat(photo_nb,"img.jpg");		
 		int max_name_len = snprintf(NULL,0,continuousFilenameFmt,jpegFilename,UINT32_MAX,INT64_MAX);
 		jpegFilenamePart = jpegFilename;
 		jpegFilename = calloc(max_name_len+1,sizeof(char));
 		strcpy(jpegFilename,jpegFilenamePart);
-	}
+		
 	
 
-	// open and initialize device
-	deviceOpen();
-	deviceInit();
+		// open and initialize device
+		deviceOpen();
+		deviceInit();
 
-	// start capturing
-	captureStart();
+		// start capturing
+		captureStart();
 
-	// process frames
-	mainLoop();
+		// process frames
+		mainLoop();
 
-	// stop capturing
-	captureStop();
+		// stop capturing
+		captureStop();
 
-	// close device
-	deviceUninit();
-	deviceClose();
+		// close device
+		deviceUninit();
+		deviceClose();
 
-	if(jpegFilenamePart != 0){ 
-		free(jpegFilename);
-	}
-
-	exit(EXIT_SUCCESS);
-
+		if(jpegFilenamePart != 0){ 
+			free(jpegFilename);
+		}
+               }
+		buff = func(connfd);
+        }
+        close(sockfd);
 	return 0;
 }
