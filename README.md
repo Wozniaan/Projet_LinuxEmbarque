@@ -99,13 +99,13 @@ $ git clone https://github.com/twam/v4l2grab
 $ sh autogen.sh
 ```
 - On commente `#undef malloc` dans config.h.in
-- On crée le fichier config.h :
-```
-$ ./configure
-```
+
+- On remplace `v4l2grab.c` avec un docker cp par celui qui est dans le ficher camera. Le but est de récuperer le code modifié par nous. 
+
 - On compile pour la RPI3 :
 ```
 $ ./configure CC=/root/buildroot-precompiled-2017.08/output/host/usr/bin/arm-linux-gcc --host=linux
+
 $ make
 ```
 Il s'agit ici de cross-compilation puisque la carte Raspberry n'a pas la même architecture que la machine sur laquelle on fait la compilation. Le binaire généré ne sera notamment pas exécutable sur ladite machine.
