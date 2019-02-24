@@ -1066,19 +1066,18 @@ int main(int argc, char **argv)
     fseek(picture, 0, SEEK_SET);
     printf("Sending Picture as Byte Array\n");
     char send_buffer[size_picture];
-   
+
     while(!feof(picture)) {
       fread(send_buffer, 1, sizeof(send_buffer), picture);
       write(sockfd, send_buffer, sizeof(send_buffer));
       bzero(send_buffer, sizeof(send_buffer));
     }
+    count_photos += 1;
     fclose(picture);
     }
     if (buff != 's')
       write(sockfd, "ok", sizeof("ok"));
-
 		buff = func(connfd);
-    count_photos += 1;
     }
     close(sockfd);
 	return 0;
