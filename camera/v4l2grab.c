@@ -21,7 +21,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
- 
+
  /**************************************************************************
  *   Modification History                                                  *
  *                                                                         *
@@ -60,12 +60,12 @@
 #include <signal.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <sys/socket.h> 
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#define MAX 80 
-#define PORT 12810 
-#define SA struct sockaddr 
+#define MAX 80
+#define PORT 12810
+#define SA struct sockaddr
 #include "config.h"
 #include "yuv.h"
 
@@ -125,7 +125,7 @@ void StopContCapture(int sig_id) {
 void InstallSIGINTHandler() {
 	struct sigaction sa;
 	CLEAR(sa);
-	
+
 	sa.sa_handler = StopContCapture;
 	if(sigaction(SIGINT, &sa, 0) != 0)
 	{
@@ -352,7 +352,7 @@ static int frameRead(void)
 	mainloop: read frames and process them
 */
 static void mainLoop(void)
-{	
+{
 	int count;
 	unsigned int numberOfTimeouts;
 
@@ -744,12 +744,12 @@ static void deviceInit(void)
 		height = fmt.fmt.pix.height;
 		fprintf(stderr,"Image height set to %i by device %s.\n", height, deviceName);
 	}
-	
+
   /* If the user has set the fps to -1, don't try to set the frame interval */
   if (fps != -1)
   {
     CLEAR(frameint);
-    
+
     /* Attempt to set the frame interval. */
     frameint.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     frameint.parm.capture.timeperframe.numerator = 1;
@@ -871,67 +871,67 @@ long_options [] = {
 };
 
 
-char func(int sockfd) 
-{ 
+char func(int sockfd)
+{
     char buff[1] = "0";
-    char buff_tot[MAX]; 
-     
-    // infinite loop for chat 
-    // read the message from client and copy it in buffer 
-    read(sockfd, buff_tot, sizeof(buff_tot)); 
-    // send that buffer to client 
-    write(sockfd, "5 / 5", sizeof("5 / 5"));
-    printf("commande = %c\n", buff_tot[0]);  
+    char buff_tot[MAX];
+
+    // infinite loop for chat
+    // read the message from client and copy it in buffer
+    read(sockfd, buff_tot, sizeof(buff_tot));
+    printf("commande = %c\n", buff_tot[0]);
     return buff_tot[0];
 
-} 
+}
 
 int main(int argc, char **argv)
 {
     char buff = '0';
-    int sockfd, connfd, len; 
-    struct sockaddr_in servaddr, cli; 
-  
-    // socket create and verification 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-    if (sockfd == -1) { 
-        printf("socket creation failed...\n"); 
-        exit(0); 
-    } 
+    int sockfd, connfd, len;
+    struct sockaddr_in servaddr, cli;
+    FILE *picture;
+    int size_picture;
+
+    // socket create and verification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("socket creation failed...\n");
+        exit(0);
+    }
     else
-        printf("Socket successfully created..\n"); 
-    bzero(&servaddr, sizeof(servaddr)); 
-  
-    // assign IP, PORT 
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-    servaddr.sin_port = htons(PORT); 
-  
-    // Binding newly created socket to given IP and verification 
-    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) { 
-        printf("socket bind failed...\n"); 
-        exit(0); 
-    } 
+        printf("Socket successfully created..\n");
+    bzero(&servaddr, sizeof(servaddr));
+
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servaddr.sin_port = htons(PORT);
+
+    // Binding newly created socket to given IP and verification
+    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
+        printf("socket bind failed...\n");
+        exit(0);
+    }
     else
-        printf("Socket successfully binded..\n"); 
-  
-    // Now server is ready to listen and verification 
-    if ((listen(sockfd, 5)) != 0) { 
-        printf("Listen failed...\n"); 
-        exit(0); 
-    } 
+        printf("Socket successfully binded..\n");
+
+    // Now server is ready to listen and verification
+    if ((listen(sockfd, 5)) != 0) {
+        printf("Listen failed...\n");
+        exit(0);
+    }
     else
-        printf("Server listening..\n"); 
-    len = sizeof(cli); 
-  
-    // Accept the data packet from client and verification 
-    connfd = accept(sockfd, (SA*)&cli, &len); 
-    if (connfd < 0) { 
-        printf("server acccept failed...\n"); 
-        exit(0); 
-    } 
+        printf("Server listening..\n");
+    len = sizeof(cli);
+
+    // Accept the data packet from client and verification
+    connfd = accept(sockfd, (SA*)&cli, &len);
+    if (connfd < 0) {
+        printf("server acccept failed...\n");
+        exit(0);
+    }
     else
-        printf("server acccept the client...\n"); 
+        printf("server acccept the client...\n");
 
 	for (;;) {
 		int index, c = 0;
@@ -1000,7 +1000,7 @@ int main(int argc, char **argv)
 				// set height
 				height = atoi(optarg);
 				break;
-				
+
 			case 'I':
 				// set fps
 				fps = atoi(optarg);
@@ -1011,7 +1011,7 @@ int main(int argc, char **argv)
 				continuous = 1;
 				InstallSIGINTHandler();
 				break;
-				
+
 
 			case 'v':
 				printf("Version: %s\n", VERSION);
@@ -1028,18 +1028,17 @@ int main(int argc, char **argv)
 	jpegFilename = "img.jpg";
 	int count_photos = 0;
 	char photo_nb[12];
-        buff = func(connfd);	
-        while (buff != 'f') { 
+  buff = func(connfd);
+  while (buff != 'f') {
 		if(buff == 's') {
 		sprintf(photo_nb,"%d",count_photos);
-		count_photos += 1;
-	        jpegFilename = strcat(photo_nb,"img.jpg");		
+	        jpegFilename = strcat(photo_nb,"img.jpg");
 		int max_name_len = snprintf(NULL,0,continuousFilenameFmt,jpegFilename,UINT32_MAX,INT64_MAX);
 		jpegFilenamePart = jpegFilename;
 		jpegFilename = calloc(max_name_len+1,sizeof(char));
 		strcpy(jpegFilename,jpegFilenamePart);
-		
-	
+
+
 
 		// open and initialize device
 		deviceOpen();
@@ -1058,12 +1057,29 @@ int main(int argc, char **argv)
 		deviceUninit();
 		deviceClose();
 
-		if(jpegFilenamePart != 0){ 
+		if(jpegFilenamePart != 0){
 			free(jpegFilename);
 		}
-               }
+    picture = fopen(jpegFilename, "r");
+    fseek(picture, 0, SEEK_END);
+    size_picture = ftell(picture);
+    fseek(picture, 0, SEEK_SET);
+    printf("Sending Picture as Byte Array\n");
+    char send_buffer[size_picture];
+   
+    while(!feof(picture)) {
+      fread(send_buffer, 1, sizeof(send_buffer), picture);
+      write(sockfd, send_buffer, sizeof(send_buffer));
+      bzero(send_buffer, sizeof(send_buffer));
+    }
+    fclose(picture);
+    }
+    if (buff != 's')
+      write(sockfd, "ok", sizeof("ok"));
+
 		buff = func(connfd);
-        }
-        close(sockfd);
+    count_photos += 1;
+    }
+    close(sockfd);
 	return 0;
 }
