@@ -1,13 +1,19 @@
 # coding: utf-8
 
 import socket
-import cv2
-import numpy as np
+import signal
+
+def signal_terminate_handler(signum, frame):
+    print "Received signal: {}. Fermeture de la connexion ".format(signum)
+    connexion_avec_serveur.close()
+    connexion_avec_serveur2.close()
+
+signal.signal(signal.SIGTERM, signal_terminate_handler)
+signal.signal(signal.SIGINT, signal_terminate_handler)
 
 hote1 = "localhost"
 port1 = 12800
 port2 = 12810
-countImage = 1
 
 """ connexion serveur servomoteur """
 connexion_avec_serveur = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -43,12 +49,8 @@ while msg_a_envoyer != b"fin":
         msg_a_envoyer_camera = msg_a_envoyer[2].encode()
         # On envoie le message
         connexion_avec_serveur2.send(msg_a_envoyer_camera)
-        msg_recu = connexion_avec_serveur2.recv(40960000)
-        print('Image ' + str(countImage) + ' recu')
-        nparr = np.fromstring(msg_recu, np.uint8)
-        img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        cv2.imwrite('image' + str(countImage) + '.jpg',img_np)
-        countImage = countImage + 1
+        msg_recu = connexion_avec_serveur2.recv(1024)
+        print(msg_recu.decode()) # Là encore, peut planter s'il y a des accents
 
 
 print("Fermeture de la connexion")
