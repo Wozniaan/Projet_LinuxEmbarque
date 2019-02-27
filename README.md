@@ -117,16 +117,29 @@ $ cd /root
 $ ./v4l2grab -d /dev/video0 -o img.jpg
 ```
 
-**NB.** Dans le projet git on trouve :
-- Executable avec socket : Projet_linux_embarque/camera/avecSocket/v4l2grab
-- Code avec socket : Projet_linux_embarque/camera/v4l2grab.c
-
 ## Documentation utilisateur
 
-Un certain nombre des étapes de configuration et installation précédemment évoquées sont automatisées à l'aide du Makefile :
-- Copie des codes Python pour le servo-moteur et son serveur,
-- Copie de l'exécutable pour le module V4L2 permettant l'utilisation de la caméra et son serveur,
-- Lancement des serveurs, activation du module...
+### Contenu du dépôt Github
 
-**TODO**
+**Projet_LinuxEmbarque/camera :** codes en C et exécutable (après cross-compilation) pour l'API V4L2 et le serveur de la caméra associé.
 
+**Projet_LinuxEmbarque/client_serveur_python :** codes du client et de deux serveurs en Python. Le client est celui utilisé sur la machine souhaitant communiquer avec la Raspberry, les deux serveurs ont servi pour les tests intermédiaires.
+
+**Projet_LinuxEmbarque/servoMoteur :** code en Python pour la gestion du servomoteur et du serveur associé.
+
+### Makefile
+
+Un certain nombre de commandes peuvent être automatisées à l'aide d'un Makefile. On donne dans ce projet un exemple d'utilisation (qui peut sembler superflu, effectivement). On y a défini deux règles (`installation` et `client`), qui sont appelées par les commandes suivantes :
+- `make installation` : Lorsque la carte SD est directement connectée à l'ordinateur, au moment du flashage par exemple, cette commande permet de copier le code Python pour le servo-moteur et l'exécutable pour le module V4L2 (permettant l'utilisation de la caméra et son serveur) au bon endroit sur la carte,
+- `make client` : Lorsque l'on est connecté à la carte en ethernet, permet le lancement du client. Attention, cette commande ne doit être utilisée qu'une fois les serveurs lancés.
+
+### Utilisation - Etapes
+
+On part du principe que tout a été correctement configuré et que tous les fichiers nécessaires ont été copiées au bon endroit.
+
+1. **Lancement serveurs :** Dans deux terminaux, se connecter en SSH (`ssh user@172.20.11.112`) puis passer superutilisateur (mot de passe `root1*`). Se placer dans le dossier `/root`et lancer les serveurs (`python serveur_sm.py` pour le servo-moteur et `./v4l2grab` pour la caméra).
+2. **Lancement client :** Dans un nouveau terminal, lancer directement le client (`make client`). Il suffit alors de suivre les instructions du client pour communiquer avec les deux serveurs.
+
+### Remarque
+
+En l'état actuel, il est possible de gérer complètement le servo-moteur et de prendre une photo avec la caméra. La photo est cependant enregistrée en local, sur la carte SD, et il faut aller la récupérer "à la main".

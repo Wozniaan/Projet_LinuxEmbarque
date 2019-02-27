@@ -3,11 +3,28 @@
 import socket
 import cv2
 import numpy as np
+import signal
+
+
+def signal_terminate_handler(signum, frame):
+    """
+    Signal handler
+    
+    Permet de gerer la fermeture du socket lors d'une interruption volontaire du client
+    """
+    
+    print "Received signal: {}. Fermeture de la connexion ".format(signum)
+    connexion_avec_serveur.close()
+    connexion_avec_serveur2.close()
+
+signal.signal(signal.SIGTERM, signal_terminate_handler)
+signal.signal(signal.SIGINT, signal_terminate_handler)
 
 
 hote1 = "172.20.11.112"
 port1 = 12830
 port2 = 12810
+
 countImage = 1
 
 """ connexion serveur servomoteur """
@@ -25,7 +42,7 @@ print("Connexion établie avec le serveur sur le port du servomoteur {}".format(
 
 msg_a_envoyer = b""
 while msg_a_envoyer != b"fin":
-    msg_a_envoyer = raw_input("Entrer commande sous forme: -moteur -camera ou moteur: 1 pour gauche 2 pour droite, camera:s pour prendre la photo, x sinon\n")
+    msg_a_envoyer = raw_input("Entrer commande sous forme: moteur camera ou moteur: vaut 1 pour une rotation vers la gauche ou 2 pour rotation vers la droite, camera : vaut s pour prendre la photo, x sinon\n")
     # Peut planter si vous tapez des caractères spéciaux
     if (msg_a_envoyer[0] != '1' and msg_a_envoyer[0] != '2') or (msg_a_envoyer[2] != "s" and msg_a_envoyer[2] != "x") or (msg_a_envoyer[1] != " ") or (len(msg_a_envoyer) > 3):
         print("Le format de la commande n'est pas bon")
