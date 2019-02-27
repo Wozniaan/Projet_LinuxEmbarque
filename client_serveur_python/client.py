@@ -4,6 +4,14 @@ import socket
 import cv2
 import numpy as np
 
+def signal_terminate_handler(signum, frame):
+    print "Received signal: {}. Fermeture de la connexion ".format(signum)
+    connexion_avec_serveur.close()
+    connexion_avec_serveur2.close()
+
+signal.signal(signal.SIGTERM, signal_terminate_handler)
+signal.signal(signal.SIGINT, signal_terminate_handler)
+
 hote1 = "localhost"
 port1 = 12800
 port2 = 12810
