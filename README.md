@@ -142,4 +142,16 @@ On part du principe que tout a été correctement configuré et que tous les fic
 
 ### Remarque
 
-En l'état actuel, il est possible de gérer complètement le servo-moteur et de prendre une photo avec la caméra. La photo est cependant enregistrée en local, sur la carte SD, et il faut aller la récupérer "à la main".
+En l'état actuel, les images sont enregistrées dans le même répertoire que celui où se trouve le client. 
+
+Néanmoins, les images sont envoyées avec un certains retard à l'ordinateur hébergeant le client:
+
+Lorsqu'on envoie "1 s" la première fois - le serveur crée l'image 0, mais ne l'envoie pas au client.
+
+Lorsqu'on envoie "1 s" la deuxième fois - le serveur crée l'image 1, mais ne l'envoie pas au client.
+
+Lorsqu'on envoie "1 s" la troisième fois - le serveur crée l'image 2, mais il envoie l'image 1 au client et elle est bien reçue et sauvegardée dans le répertoire du client.
+
+Lorsqu'on envoie "1 s" la quatrième fois - le serveur crée l'image 3, il envoie l'image 2 au client et elle est bien reçue et sauvegardée dans le répertoire du client et ainsi de suite...
+
+Ainsi, seulement l'image 1 et la dernière image créée seront perdues, les autres vont arriver avec du retard sur l'ordinateur client. Pour le servomoteur tout fonctionne bien en direct.
