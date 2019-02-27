@@ -27,7 +27,7 @@ time.sleep(2)
 
                                                     
 hote = ''
-port = 12800
+port = 12820
 
 print"\n+----------/ ServoMoteur  Controlleur /----------+"
 print"|                                                |"
@@ -35,22 +35,30 @@ print"| Le Servo doit etre branche au pin 11 / GPIO 17 |"
 print"|                                                |"
 print"+------------------------------------------------+\n"
                                  
-print"Comment controler le Servo ?"
              
                          
 socket_sm = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_sm.bind((hote, port))         
 socket_sm.listen(5) 
 client, adress = socket_sm.accept()                    
-print "{} connected".format(adresse) 
+print "{} connected".format(adress) 
 
-                                 
-while True:             
+choix = b""
+                                
+while choix != b"fin":             
     print "serveur microcontroller listening"            
                                                            
-    choix = client.recv(255) 
-                             
-    if (int(choix) != 1 or int(choix) != 2 ):           
+    choix = client.recv(255)
+    print choix
+    print type(choix)
+
+    choix = choix.decode()
+    print choix
+    print type(choix)
+
+    choix = int(choix)
+                     
+    if (choix != 1 and choix != 2 ):           
         print "ERROR: expected 1 or 2, received {}".format(choix)
 #    choix = int(input("1. aller à gauche\n2. pour aller à droite\n"))
                                                            
@@ -68,11 +76,11 @@ while True:
         angleChoisi = 25                                               
     print angleChoisi   
                                               
-    pwm.ChangeDutyCycle(angleChoisi)          
+   # pwm.ChangeDutyCycle(angleChoisi)          
     time.sleep(duree)                                             
                                                                        
-    current_angle += angle 
-          
+    current_angle += delta_angle 
+    client.send(b"5 / 5")       
 GPIO.cleanup() 
 socket_sm.close()
 client.close()
