@@ -1,6 +1,15 @@
 # coding: utf-8 
 
 import socket
+import signal
+
+def signal_terminate_handler(signum, frame):
+    print "Received signal: {}. Your server is terminated ".format(signum)
+    connexion_avec_client.close()
+    connexion_principale.close()
+
+signal.signal(signal.SIGTERM, signal_terminate_handler)
+signal.signal(signal.SIGINT, signal_terminate_handler)
 
 hote = ''
 port = 12810
