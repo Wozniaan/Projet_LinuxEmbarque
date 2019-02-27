@@ -3,6 +3,7 @@
 import socket
 import cv2
 import numpy as np
+import signal
 
 def signal_terminate_handler(signum, frame):
     print "Received signal: {}. Fermeture de la connexion ".format(signum)
