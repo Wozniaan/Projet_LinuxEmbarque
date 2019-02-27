@@ -117,16 +117,19 @@ $ cd /root
 $ ./v4l2grab -d /dev/video0 -o img.jpg
 ```
 
-**NB.** Dans le projet git on trouve :
-- Executable avec socket : Projet_linux_embarque/camera/avecSocket/v4l2grab
-- Code avec socket : Projet_linux_embarque/camera/v4l2grab.c
-
 ## Documentation utilisateur
 
-Un certain nombre des étapes de configuration et installation précédemment évoquées sont automatisées à l'aide du Makefile :
-- Copie des codes Python pour le servo-moteur et son serveur,
-- Copie de l'exécutable pour le module V4L2 permettant l'utilisation de la caméra et son serveur,
-- Lancement des serveurs, activation du module...
+### Contenu du dépôt Github
 
-**TODO**
+**Projet_LinuxEmbarque/camera :** codes en C et exécutable (après cross-compilation) pour l'API V4L2 et le serveur de la caméra associé.
 
+**Projet_LinuxEmbarque/client_serveur_python :** codes du client et de deux serveurs en Python. Le client est celui utilisé sur la machine souhaitant communiquer avec la Raspberry, les deux serveurs ont servi pour les tests intermédiaires.
+
+**Projet_LinuxEmbarque/servoMoteur :** code en Python pour la gestion du servomoteur et du serveur associé.
+
+### Makefile
+
+Un certain nombre des étapes d'installation et de lancement précédemment évoquées sont automatisées à l'aide du Makefile :
+- Copie des codes Python pour le servo-moteur et de l'exécutable pour le module V4L2 (permettant l'utilisation de la caméra et son serveur),
+- Lancement du client (et des serveurs pour les tests) et connexion en SSH,
+- Activation du module pour la camera et prise de photo "à la main" (pour test).
