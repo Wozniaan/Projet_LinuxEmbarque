@@ -63,6 +63,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <unistd.h>
 #define MAX 80
 #define PORT 12810
 #define SA struct sockaddr
@@ -888,9 +889,10 @@ int main(int argc, char **argv)
 {
     char buff = '0';
     int sockfd, connfd, len;
-    struct sockaddr_in servaddr, cli;
+    struct sockaddr_in address;
     FILE *picture;
     int size_picture;
+    int opt = 1;
 
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -898,34 +900,47 @@ int main(int argc, char **argv)
         printf("socket creation failed...\n");
         exit(0);
     }
+
     else
         printf("Socket successfully created..\n");
-    bzero(&servaddr, sizeof(servaddr));
-
-    // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(PORT);
-
-    // Binding newly created socket to given IP and verification
-    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
-        printf("socket bind failed...\n");
-        exit(0);
+    // Forcefully attaching socket to the port 8080
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
     }
+
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons( PORT );
+
+    // Forcefully attaching socket to the port 8080
+    if (bind(sockfd, (struct sockaddr *)&address, sizeof(address)) <0)
+    {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+
     else
         printf("Socket successfully binded..\n");
 
     // Now server is ready to listen and verification
-    if ((listen(sockfd, 5)) != 0) {
+    if ((listen(sockfd, 3)) != 0) {
         printf("Listen failed...\n");
         exit(0);
     }
+
     else
         printf("Server listening..\n");
-    len = sizeof(cli);
+    len = sizeof(address);
 
     // Accept the data packet from client and verification
-    connfd = accept(sockfd, (SA*)&cli, &len);
+    if ((connfd = accept(sockfd, (struct sockaddr *)&address,(socklen_t*)&len))<0)
+    {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
     if (connfd < 0) {
         printf("server acccept failed...\n");
         exit(0);
@@ -1023,62 +1038,74 @@ int main(int argc, char **argv)
 				exit(EXIT_FAILURE);
 		}
 	}
-
-	// check for need parameters
+#include <unistd.h>
 	jpegFilename = "img.jpg";
 	int count_photos = 0;
 	char photo_nb[12];
   buff = func(connfd);
-  while (buff != 'f') {
-		if(buff == 's') {
-		sprintf(photo_nb,"%d",count_photos);
-	        jpegFilename = strcat(photo_nb,"img.jpg");
-		int max_name_len = snprintf(NULL,0,continuousFilenameFmt,jpegFilename,UINT32_MAX,INT64_MAX);
-		jpegFilenamePart = jpegFilename;
-		jpegFilename = calloc(max_name_len+1,sizeof(char));
-		strcpy(jpegFilename,jpegFilenamePart);
 
+  while (buff != 'f') { //while client doesnt send end
+		if(buff == 's' ) {  //if client sends s
+			sprintf(photo_nb,"%d",count_photos); //number to string
+	    jpegFilename = strcat(photo_nb,"img.jpg");
+			int max_name_len = snprintf(NULL,0,continuousFilenameFmt,jpegFilename,UINT32_MAX,INT64_MAX);
+			jpegFilenamePart = jpegFilename;
+			jpegFilename = calloc(max_name_len+1,sizeof(char));
+			strcpy(jpegFilename,jpegFilenamePart);
 
+			// open and initialize device
+			deviceOpen();
+			deviceInit();
 
-		// open and initialize device
-		deviceOpen();
-		deviceInit();
+			// start capturing
+			captureStart();
 
-		// start capturing
-		captureStart();
+			// process frames
+			mainLoop();
 
-		// process frames
-		mainLoop();
+			// stop capturing
+			captureStop();
 
-		// stop capturing
-		captureStop();
+			// close device
+			deviceUninit();
+			deviceClose();
 
-		// close device
-		deviceUninit();
-		deviceClose();
+      printf("on evoie l'image %s\n",jpegFilename);
+    	picture = fopen(jpegFilename, "r");
+    	fseek(picture, 0, SEEK_END);
+    	size_picture = ftell(picture);
+      printf("size_picture %d\n",size_picture);
+    	fseek(picture, 0, SEEK_SET);
+    	char send_buffer[size_picture];
+      int size_total_buffer = 0;
 
-		if(jpegFilenamePart != 0){
-			free(jpegFilename);
-		}
-    picture = fopen(jpegFilename, "r");
-    fseek(picture, 0, SEEK_END);
-    size_picture = ftell(picture);
-    fseek(picture, 0, SEEK_SET);
-    printf("Sending Picture as Byte Array\n");
-    char send_buffer[size_picture];
-
-    while(!feof(picture)) {
-      fread(send_buffer, 1, sizeof(send_buffer), picture);
-      write(sockfd, send_buffer, sizeof(send_buffer));
-      bzero(send_buffer, sizeof(send_buffer));
+    	while(!feof(picture)) {
+      	fread(send_buffer, 1, sizeof(send_buffer), picture);
+      	//write(connfd, send_buffer,  sizeof(send_buffer));
+        send(connfd , send_buffer , sizeof(send_buffer),0);
+        size_total_buffer += sizeof(send_buffer);
+        bzero(send_buffer, sizeof(send_buffer));
+    	}
+      printf("size_total_buffer %d\n",size_total_buffer);
+    	printf("Image %d sent\n",count_photos);
+    	count_photos += 1;
+    	if(jpegFilenamePart != 0){
+				free(jpegFilename);
+			}
+    	fclose(picture);
     }
-    count_photos += 1;
-    fclose(picture);
+
+    else if (buff != 's'){
+      printf("on evoie ok\n");
+      send(connfd , "ok" , strlen("ok") , 0 );
     }
-    if (buff != 's')
-      write(sockfd, "ok", sizeof("ok"));
+
+
 		buff = func(connfd);
-    }
+
+  }
+
     close(sockfd);
+
 	return 0;
 }
