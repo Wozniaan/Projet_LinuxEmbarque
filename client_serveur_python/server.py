@@ -2,6 +2,7 @@
 
 import socket
 import signal
+import sys
 
 def signal_terminate_handler(signum, frame):
     """
@@ -13,12 +14,13 @@ def signal_terminate_handler(signum, frame):
     print "Received signal: {}. Your server is terminated ".format(signum)
     connexion_avec_client.close()
     connexion_principale.close()
+    sys.exit(0)
 
 signal.signal(signal.SIGTERM, signal_terminate_handler)
 signal.signal(signal.SIGINT, signal_terminate_handler)
 
 hote = '' #adresse IP du serveur
-port = 12800 #port d'acces du serveur
+port = 12830 #port d'acces du serveur
 
 """ acceptation de la connexion au client """
 connexion_principale = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
