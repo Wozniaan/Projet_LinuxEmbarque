@@ -18,7 +18,7 @@ signal.signal(signal.SIGTERM, signal_terminate_handler)
 signal.signal(signal.SIGINT, signal_terminate_handler)
 
 hote = '' #adresse IP du serveur
-port = 12800 #port d'acces du serveur
+port = 12810 #port d'acces du serveur
 
 """ acceptation de la connexion au client """
 connexion_principale = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
