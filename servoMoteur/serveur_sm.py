@@ -41,7 +41,7 @@ signal.signal(signal.SIGTERM, signal_terminate_handler)
 signal.signal(signal.SIGINT, signal_terminate_handler)
                                                     
 hote = ''
-port = 12800
+port = 12820
 
 print"\n+----------/ ServoMoteur  Controlleur /----------+"
 print"|                                                |"
@@ -49,7 +49,6 @@ print"| Le Servo doit etre branche au pin 11 / GPIO 17 |"
 print"|                                                |"
 print"+------------------------------------------------+\n"
                                  
-print"Comment controler le Servo ?"
              
                          
 socket_sm = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,23 +57,39 @@ socket_sm.listen(5)
 client, adress = socket_sm.accept()                    
 print "{} connected".format(adress) 
 
-                                 
-while True:             
+choix = b""
+                                
+while choix != b"fin":             
     print "serveur microcontroller listening"            
                                                            
-    choix = client.recv(255) 
-                             
-    if (int(choix) != 1 and int(choix) != 2 ):           
+    choix = client.recv(255)
+    print choix
+    print type(choix)
+
+    choix = choix.decode()
+    print choix
+    print type(choix)
+    
+
+    try:
+        choix = int(choix)
+    except ValueError:
+        print "Oups, ce n'est pas un int"
+
+                         
+    if (choix != 1 and choix != 2 ):           
         print "ERROR: expected 1 or 2, received {}".format(choix)
-#    choix = int(input("1. aller à gauche\n2. pour aller à droite\n"))
+
                                                            
     if (choix == 1) :                                      
         delta_angle = -5                                       
     elif(choix == 2):                                      
         delta_angle = 5                                        
-                                                           
+    else:
+        delta_angle = 0    
+                                                       
     duree = 0                                            
-    angleChoisi = (current_angle + delta_angle)/10 + 5  #increment de 5 degré à chaque fois
+    angleChoisi = (current_angle + delta_angle)/10 + 5  #increment de 5 degres a chaque fois
            
     if angleChoisi <= 6: #evite servomoteur en butee
         angleChoisi = 6                                   
@@ -85,8 +100,9 @@ while True:
     pwm.ChangeDutyCycle(angleChoisi)          
     time.sleep(duree)                                             
                                                                        
-    current_angle += angleChoisi 
-          
+    current_angle += delta_angle 
+    client.send(b"5 / 5")       
+
 GPIO.cleanup() 
 socket_sm.close()
 client.close()
