@@ -25,6 +25,20 @@ pwm.start(5)
 pwm.ChangeDutyCycle(angle_init)                                        
 time.sleep(2) 
 
+def signal_terminate_handler(signum, frame):
+    """
+    Signal handler
+    
+    Permet de gerer la fermeture du socket lors d'une interruption volontaire du serveur
+    """
+    
+    print("Received signal: {}. Your server is terminated ".format(signum))
+    client.close()
+    socket_sm.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, signal_terminate_handler)
+signal.signal(signal.SIGINT, signal_terminate_handler)
                                                     
 hote = ''
 port = 12800
@@ -42,7 +56,7 @@ socket_sm = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_sm.bind((hote, port))         
 socket_sm.listen(5) 
 client, adress = socket_sm.accept()                    
-print "{} connected".format(adresse) 
+print "{} connected".format(adress) 
 
                                  
 while True:             
@@ -50,7 +64,7 @@ while True:
                                                            
     choix = client.recv(255) 
                              
-    if (int(choix) != 1 or int(choix) != 2 ):           
+    if (int(choix) != 1 and int(choix) != 2 ):           
         print "ERROR: expected 1 or 2, received {}".format(choix)
 #    choix = int(input("1. aller à gauche\n2. pour aller à droite\n"))
                                                            
@@ -71,7 +85,7 @@ while True:
     pwm.ChangeDutyCycle(angleChoisi)          
     time.sleep(duree)                                             
                                                                        
-    current_angle += angle 
+    current_angle += angleChoisi 
           
 GPIO.cleanup() 
 socket_sm.close()
