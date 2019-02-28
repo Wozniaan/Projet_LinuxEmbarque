@@ -9,7 +9,7 @@ Created on Tue Jan 29 09:51:44 2019
 import RPi.GPIO as GPIO                                  
 import time                                                
 import socket                                              
-                                                         
+import sys                                                         
                                                           
                                                          
 GPIO.setmode(GPIO.BCM)                                     
@@ -40,8 +40,8 @@ def signal_terminate_handler(signum, frame):
 signal.signal(signal.SIGTERM, signal_terminate_handler)
 signal.signal(signal.SIGINT, signal_terminate_handler)
                                                     
-hote = ''
-port = 12820
+hote = '' #adresse IP du serveur
+port = 12820 #port d'acces au serveur du servomoteur
 
 print"\n+----------/ ServoMoteur  Controlleur /----------+"
 print"|                                                |"
@@ -50,12 +50,15 @@ print"|                                                |"
 print"+------------------------------------------------+\n"
                                  
              
-                         
+""" acceptation de la connexion au client """
+
 socket_sm = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_sm.bind((hote, port))         
 socket_sm.listen(5) 
 client, adress = socket_sm.accept()                    
 print "{} connected".format(adress) 
+
+""" communication avec le client """
 
 choix = b""
                                 
