@@ -25,6 +25,20 @@ pwm.start(5)
 pwm.ChangeDutyCycle(angle_init)                                        
 time.sleep(2) 
 
+def signal_terminate_handler(signum, frame):
+    """
+    Signal handler
+    
+    Permet de gerer la fermeture du socket lors d'une interruption volontaire du serveur
+    """
+    
+    print("Received signal: {}. Your server is terminated ".format(signum))
+    client.close()
+    socket_sm.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, signal_terminate_handler)
+signal.signal(signal.SIGINT, signal_terminate_handler)
                                                     
 hote = ''
 port = 12820
@@ -55,20 +69,27 @@ while choix != b"fin":
     choix = choix.decode()
     print choix
     print type(choix)
+    
 
-    choix = int(choix)
-                     
+    try:
+        choix = int(choix)
+    except ValueError:
+        print "Oups, ce n'est pas un int"
+
+                         
     if (choix != 1 and choix != 2 ):           
         print "ERROR: expected 1 or 2, received {}".format(choix)
-#    choix = int(input("1. aller à gauche\n2. pour aller à droite\n"))
+
                                                            
     if (choix == 1) :                                      
         delta_angle = -5                                       
     elif(choix == 2):                                      
         delta_angle = 5                                        
-                                                           
+    else:
+        delta_angle = 0    
+                                                       
     duree = 0                                            
-    angleChoisi = (current_angle + delta_angle)/10 + 5  #increment de 5 degré à chaque fois
+    angleChoisi = (current_angle + delta_angle)/10 + 5  #increment de 5 degres a chaque fois
            
     if angleChoisi <= 6: #evite servomoteur en butee
         angleChoisi = 6                                   
@@ -76,11 +97,12 @@ while choix != b"fin":
         angleChoisi = 25                                               
     print angleChoisi   
                                               
-   # pwm.ChangeDutyCycle(angleChoisi)          
+    pwm.ChangeDutyCycle(angleChoisi)          
     time.sleep(duree)                                             
                                                                        
     current_angle += delta_angle 
     client.send(b"5 / 5")       
+
 GPIO.cleanup() 
 socket_sm.close()
 client.close()
