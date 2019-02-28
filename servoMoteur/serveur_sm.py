@@ -9,8 +9,8 @@ Created on Tue Jan 29 09:51:44 2019
 import RPi.GPIO as GPIO                                  
 import time                                                
 import socket                                              
-                                                         
-                                                          
+import signal                                                        
+import sys                                                          
                                                          
 GPIO.setmode(GPIO.BCM)                                     
 GPIO.setup(17, GPIO.OUT)
@@ -74,7 +74,7 @@ while choix != b"fin":
     try:
         choix = int(choix)
     except ValueError:
-        print "Oups, ce n'est pas un int"
+        print "Oups, ce n est pas un int"
 
                          
     if (choix != 1 and choix != 2 ):           
@@ -82,9 +82,9 @@ while choix != b"fin":
 
                                                            
     if (choix == 1) :                                      
-        delta_angle = -5                                       
+        delta_angle = -10                                       
     elif(choix == 2):                                      
-        delta_angle = 5                                        
+        delta_angle = 10                                        
     else:
         delta_angle = 0    
                                                        
@@ -105,4 +105,8 @@ while choix != b"fin":
 
 GPIO.cleanup() 
 socket_sm.close()
-client.close()
+
+try:
+    client.close()
+except SyntaxError:
+    print "client does not exist yet"

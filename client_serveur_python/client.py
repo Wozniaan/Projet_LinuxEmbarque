@@ -23,7 +23,7 @@ signal.signal(signal.SIGINT, signal_terminate_handler)
 
 
 hote1 = "172.20.11.112"
-port1 = 12830
+port1 = 12820
 port2 = 12810
 
 countImage = 1
