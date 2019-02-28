@@ -22,9 +22,9 @@ signal.signal(signal.SIGTERM, signal_terminate_handler)
 signal.signal(signal.SIGINT, signal_terminate_handler)
 
 
-hote1 = "172.20.11.112"
-port1 = 12830
-port2 = 12810
+hote1 = "172.20.11.112" #adresse IP des serveurs
+port1 = 12820 #port d'acces au serveur du servomoteur
+port2 = 12810 #port d'acces au serveur de la camera
 
 countImage = 1
 
